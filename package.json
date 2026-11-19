@@ -15,13 +15,14 @@
     "test:api": "playwright test --project=api",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
-    "newman": "newman run postman/bookflow.postman_collection.json -e postman/live.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\"",
+    "newman": "newman run postman/bookflow.postman_collection.json -e postman/live.postman_environment.json --reporters cli,htmlextra,json --reporter-json-export reports/newman/results.json --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\"",
     "warmup": "node scripts/warmup.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "newman:local": "newman run postman/bookflow.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\""
+    "newman:local": "newman run postman/bookflow.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra,json --reporter-json-export reports/newman/results.json --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\"",
+    "build:site": "node scripts/build-site.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

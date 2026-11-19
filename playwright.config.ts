@@ -26,7 +26,7 @@ export default defineConfig({
   reporter: [
     ['list'],
     ['html', { outputFolder: 'reports/playwright', open: 'never' }],
-    ['json', { outputFile: 'reports/playwright/results.json' }],
+    ['json', { outputFile: 'reports/playwright-results.json' }],
     ...(CI ? [['github'] as ['github']] : []),
   ],
   use: {
