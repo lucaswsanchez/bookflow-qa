@@ -8,6 +8,10 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ['k6/**/*.js'],
+    languageOptions: { globals: { __ENV: 'readonly' } },
+  },
+  {
     files: ['scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },

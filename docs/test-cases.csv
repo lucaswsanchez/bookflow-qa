@@ -1,0 +1,83 @@
+"ID","Title","User story","Type","Technique","Priority","Preconditions","Steps","Expected result","Automation","Last result"
+"TC-BK-01","Client books an appointment end to end","US-01","Functional","Use case","High","Booking page /book/barberia-costanera is reachable. API warm.","1. Choose ""Classic Haircut""
+2. Choose a professional
+3. Choose a day with free times and the first time
+4. Enter name, phone and email
+5. Click ""Confirm booking""","Confirmation screen with a code in the format BF-XXXXXX and an ""Add to calendar"" button.","Playwright `tests/e2e/booking.spec.ts` (Chromium, Firefox, Mobile Chrome)","Pass"
+"TC-BK-02","Professionals are filtered by the chosen service","US-01","Functional","Equivalence partitioning","Medium","Seed data: Hair Coloring is offered only by Lucía Benítez.","1. Choose ""Hair Coloring""","Only Lucía Benítez is listed; Martín and Diego are not.","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-03","Back button returns to the previous step","US-01","Usability","Use case","Low","Booking page open.","1. Choose a service and a professional
+2. Click ""Go back"" twice","The professional step and then the service step are shown again.","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-04","Required client fields are validated","US-01","Negative","Equivalence partitioning","High","Details step reached (service, professional and time chosen).","1. Leave all fields empty
+2. Click ""Confirm booking""","Errors under Name and Phone; Email (optional) has no error; inputs get aria-invalid; no booking request is sent.","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-05a","Name shorter than 2 characters is rejected","US-01","Boundary","Boundary value analysis","Medium","Details step reached.","1. Name ""A"" (1 char), valid phone
+2. Submit","""Please enter your full name"". Boundary: 1 char invalid, 2 chars valid (lower bound of 2–80).","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-05b","Phone with letters is rejected","US-01","Negative","Equivalence partitioning","Medium","Details step reached.","1. Phone ""379-ABC-123""
+2. Submit","""Please enter a valid phone number"".","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-05c","Phone shorter than 6 characters is rejected","US-01","Boundary","Boundary value analysis","Medium","Details step reached.","1. Phone ""12345"" (5 chars)
+2. Submit","""Please enter a valid phone number"" (valid length is 6–20).","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-05d","Malformed email is rejected","US-01","Negative","Equivalence partitioning","Medium","Details step reached.","1. Email ""qa.automation@""
+2. Submit","""Please enter a valid email"".","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-06","Unknown business shows an error state","US-01","Negative","Error guessing","Low","None.","1. Open /book/this-business-does-not-exist","Error state ""This business does not exist."" with a retry button.","Playwright `tests/e2e/booking.spec.ts`","Pass"
+"TC-BK-07","Phone made only of symbols is rejected","US-10","Negative","Equivalence partitioning","Medium","Admin access token.","1. POST /clients with phone ""------""","400 Bad Request: a phone needs digits.","Exploratory API session (2026-11-19)","Fail: lucaswsanchez/bookflow#59"
+"TC-BK-08","Booking can be looked up by its code without exposing contact data","US-01","Functional","Use case","Medium","A booking exists.","1. GET /public/bookings/{code}","200 with service, professional and time; no client phone or email in the body.","Newman: ""Look up the booking by code""","Pass"
+"TC-AV-01","Decision table R1: free slot inside working hours is offered","US-02","Functional","Decision table","High","Weekday with free time for Martín (09:00–13:00, 16:00–20:00).","1. GET availability for Classic Haircut (30 min), Martín, that day","Slots start inside the working ranges, every 15 minutes.","Newman: ""Get availability 30 days ahead""; exploratory API session","Pass"
+"TC-AV-02","Decision table R2: service must end before the range ends","US-02","Boundary","Decision table + BVA","High","Lucía works 10:00–18:00 on weekdays.","1. GET availability for Hair Coloring (90 min) with Lucía","Last slot is 16:30 (16:30 + 90 min = 18:00); 16:45 is not offered.","Exploratory API session (2026-11-19)","Pass"
+"TC-AV-03","Decision table R3: overlapping a non-cancelled appointment is not offered","US-08","Functional","Decision table","High","An appointment exists for the slot.","1. Book a slot
+2. GET availability for the same day","The booked start time is no longer listed.","Playwright `tests/e2e/appointments.spec.ts` (TC-AP-02, first assertion)","Pass"
+"TC-AV-04","Decision table R4: a cancelled appointment frees the slot","US-05","Functional","Decision table","High","A booked slot.","1. Cancel the appointment
+2. GET availability again","The start time is offered again.","Playwright `tests/e2e/appointments.spec.ts`; Newman: ""Cancelled slot is offered again""","Pass"
+"TC-AV-05","Decision table R5: day without working hours has no slots","US-02","Functional","Decision table","Medium","Martín does not work on Sundays.","1. GET availability for Martín on a Sunday","200 with an empty slot list.","Exploratory API session (2026-11-19)","Pass"
+"TC-AV-06","Decision table R6: past times and past dates are not offered","US-02","Boundary","Decision table","High","Today, after opening time.","1. GET availability for today
+2. GET availability for 2020-01-01","Today only lists times after ""now"" (business time zone); a past date returns no slots.","Exploratory API session (2026-11-19)","Pass"
+"TC-AV-07","Decision table R7: booking horizon is 60 days","US-02","Boundary","Boundary value analysis","High","None.","1. GET availability for today + 60
+2. GET availability for today + 61","Day 60: 200. Day 61: 400 ""Bookings can be made up to 60 days in advance"".","Playwright `tests/api/booking.api.spec.ts`; Newman: ""Get availability beyond the 60-day horizon (400)""","Pass"
+"TC-AV-08","Decision table R8: professional who does not offer the service","US-02","Negative","Decision table","Medium","Martín does not offer Hair Coloring.","1. GET availability for Hair Coloring with Martín","404 ""Staff member not found or does not offer this service"".","Exploratory API session (2026-11-19)","Pass"
+"TC-AV-09","Two concurrent bookings for the same slot","US-08","Functional","Error guessing (race condition)","High","A free slot.","1. Send two identical POST /bookings at the same time","Exactly one 201 and one 409 ""The selected time slot is no longer available"".","Playwright `tests/api/booking.api.spec.ts`; Newman: ""Book the same slot again (409)""","Pass"
+"TC-AU-01","Admin logs in with valid credentials","US-03","Functional","Equivalence partitioning","High","Logged out.","1. Open /login
+2. Enter admin@demo.com / Admin123!
+3. Click ""Sign in""","Redirect to /app; sidebar shows ""Admin Demo"" and the ADMIN role.","Playwright `tests/e2e/auth.spec.ts`","Pass"
+"TC-AU-02","Wrong password is rejected","US-03","Negative","Equivalence partitioning","High","Logged out.","1. Log in with a wrong password","Generic error ""Invalid email or password""; user stays on /login.","Playwright `tests/e2e/auth.spec.ts`; Playwright `tests/api/auth-and-roles.api.spec.ts`","Pass"
+"TC-AU-03","Invalid email format and short password are caught on the client","US-03","Boundary","BVA (password min 6)","Medium","Logged out.","1. Email ""admin@"", password ""12345"" (5 chars)
+2. Submit","Field errors for both fields; no request is sent to /auth/login.","Playwright `tests/e2e/auth.spec.ts`","Pass"
+"TC-AU-04","Staff logs in and logs out","US-03","Functional","Use case","High","Logged out.","1. Log in as staff@demo.com
+2. Click ""Log out""
+3. Open /app","STAFF role shown; after logout /app redirects to /login.","Playwright `tests/e2e/auth.spec.ts`","Pass"
+"TC-AU-05","Anonymous access to the panel redirects to login","US-04","Negative","Error guessing","High","Logged out.","1. Open /app/appointments","Redirect to /login.","Playwright `tests/e2e/auth.spec.ts`","Pass"
+"TC-AU-06","Used refresh tokens cannot be reused (rotation)","US-03","Functional","State transition","High","A valid refresh token.","1. POST /auth/refresh with token A
+2. POST /auth/refresh with token A again","First call: 200 with a new token B. Second call: 401 ""Invalid refresh token"".","Playwright `tests/api/auth-and-roles.api.spec.ts`; Newman: ""Reuse a rotated refresh token (401)""","Pass"
+"TC-AU-07","Login is rate limited after 10 attempts per minute","US-03","Negative","Boundary value analysis","Medium","Logged out.","1. Send 11 login requests within one minute from the same IP","The 11th returns 429 and the UI shows ""Too many attempts. Please wait a minute and try again.""","Manual only (local environment)","Not run: would lock the shared demo login for every visitor for a minute"
+"TC-RB-01","Admin sees every section","US-04","Functional","Decision table (role × section)","High","Logged in as ADMIN.","1. Open the sidebar","Overview, Agenda, Appointments, Reports, Services, Staff, Clients and Settings are visible.","Playwright `tests/e2e/permissions.spec.ts` (Chromium, Firefox)","Pass"
+"TC-RB-02","Admin can filter appointments by professional","US-04","Functional","Use case","Medium","Logged in as ADMIN.","1. Open Appointments","Professional filter with ""All professionals"" + 3 staff.","Playwright `tests/e2e/permissions.spec.ts`","Pass"
+"TC-RB-03","Staff only sees shared sections","US-04","Functional","Decision table (role × section)","High","Logged in as STAFF.","1. Open the sidebar","Overview, Agenda and Appointments only; no admin sections.","Playwright `tests/e2e/permissions.spec.ts` (Chromium, Firefox)","Pass"
+"TC-RB-04","Staff opening an admin URL is redirected","US-04","Negative","Error guessing","High","Logged in as STAFF.","1. Open /app/services, /app/reports and /app/clients","Each one redirects to /app.","Playwright `tests/e2e/permissions.spec.ts`","Pass"
+"TC-RB-05","Staff only sees their own appointments","US-04","Functional","Equivalence partitioning","High","One appointment for the logged-in staff member and one for another professional.","1. Open Appointments as STAFF
+2. Search each booking code","Own booking is listed; the other professional's booking is not; no professional filter.","Playwright `tests/e2e/permissions.spec.ts`","Pass"
+"TC-RB-06","Staff cannot read or change another professional's appointment via the API","US-04","Negative","Error guessing","High","STAFF access token.","1. GET and PATCH another professional's appointment
+2. GET /appointments?staffId=<other>","404 on GET/PATCH (no data leak); the staffId filter is ignored.","Playwright `tests/api/auth-and-roles.api.spec.ts`; Newman","Pass"
+"TC-RB-07","Staff gets 403 on admin-only endpoints","US-04","Negative","Equivalence partitioning","High","STAFF access token.","1. POST /services
+2. GET /clients","403 with the standard error body.","Playwright `tests/api/auth-and-roles.api.spec.ts`; Newman","Pass"
+"TC-AP-01","Admin marks an appointment as completed","US-05","Functional","State transition","High","A CONFIRMED appointment.","1. Open Appointments, custom range, search the code
+2. Open the appointment
+3. Click ""Completed""","Completed is the current status, a toast is shown and the API returns COMPLETED.","Playwright `tests/e2e/appointments.spec.ts` (Chromium, Firefox)","Pass"
+"TC-AP-02","Cancelling frees the slot","US-05","Functional","State transition","High","A CONFIRMED appointment.","1. Set status to Cancelled","The slot is offered again in the public availability.","Playwright `tests/e2e/appointments.spec.ts`","Pass"
+"TC-AP-03","Status filter lists only that status","US-07","Functional","Equivalence partitioning","Medium","Logged in as ADMIN.","1. Period ""This week""
+2. Status ""Completed""","Every row has status COMPLETED.","Playwright `tests/e2e/appointments.spec.ts`","Pass"
+"TC-AP-04","Invalid status value is rejected","US-10","Negative","Equivalence partitioning","Medium","Admin token.","1. PATCH /appointments/{id}/status with ""DONE""","400 listing CONFIRMED, COMPLETED, CANCELLED, NO_SHOW.","Newman: ""Update status with an invalid value (400)""","Pass"
+"TC-AP-05","Appointments CSV export","US-07","Functional","Use case","Medium","Admin token.","1. GET /appointments/export for a date","200, Content-Type text/csv and a header row.","Newman: ""Export appointments as CSV""","Pass"
+"TC-AP-06","Impossible calendar dates are rejected","US-10","Negative","Boundary value analysis","Medium","Admin token.","1. GET /appointments?from=2026-02-30
+2. GET /appointments?from=2026-13-45","400 Bad Request.","Playwright `tests/api/booking.api.spec.ts` (test.fail)","Fail: lucaswsanchez/bookflow#57 (returns 500)"
+"TC-SV-01","Admin creates, edits and deletes a service","US-06","Functional","Use case (CRUD)","High","Logged in as ADMIN.","1. New service: name, 45 min, ARS 12,000, not bookable online
+2. Edit price to 15,500
+3. Delete and confirm","Row appears with 45 min and $ 12.000, then $ 15.500, then disappears.","Playwright `tests/e2e/services.spec.ts` (Chromium, Firefox); Newman","Pass"
+"TC-SV-02","Duration outside 5–480 minutes is rejected","US-06","Boundary","Boundary value analysis","High","New service form open.","1. Duration 4
+2. Duration 481","""At least 5 minutes"" / ""At most 8 hours""; the form stays open.","Playwright `tests/e2e/services.spec.ts`; Newman (4 min via API)","Pass"
+"TC-SV-03","Empty name and negative price are rejected","US-06","Negative","Equivalence partitioning","Medium","New service form open.","1. Name "" "", price -1","""Name is required"" and ""Price cannot be negative"".","Playwright `tests/e2e/services.spec.ts`","Pass"
+"TC-SV-04","Price above the 32-bit integer limit is rejected","US-10","Boundary","Boundary value analysis","Low","Admin token.","1. POST /services with price 2147483648","400 Bad Request.","Playwright `tests/api/booking.api.spec.ts` (test.fail)","Fail: lucaswsanchez/bookflow#58 (returns 500)"
+"TC-UX-01","Booking flow can be completed with the keyboard only","US-09","Usability","Exploratory (keyboard)","High","Booking page, no mouse.","1. Tab to a service, Enter
+2. Tab to a professional, Enter
+3. Tab to a time, Enter
+4. Tab into the form, Enter with empty fields","Every control is reachable with a visible focus; on submit, focus moves to the first invalid field.","Manual, built-in browser (2026-11-19)","Pass with observations (see bug-reports.md, suggestions S-01, S-02, S-03)"
+"TC-UX-02","Public pages have no new critical/serious WCAG A/AA violations","US-09","Usability","Automated a11y scan (axe-core)","High","None.","1. Scan landing, booking and login pages","No critical/serious violations outside the documented baseline.","Playwright `tests/a11y/accessibility.spec.ts`","Pass with known issue lucaswsanchez/bookflow#60 (color contrast)"
+"TC-RS-01","Booking page on a phone","US-09","Usability","Responsive check","Medium","Pixel 7 viewport.","1. Open the booking page and choose a service","Compact summary chips are shown, side panel hidden, no horizontal scroll.","Playwright `tests/e2e/responsive.spec.ts` (Mobile Chrome)","Pass"
+"TC-RS-02","Admin navigation on a phone","US-09","Usability","Responsive check","Medium","Pixel 7 viewport, logged in as ADMIN.","1. Tap the menu button
+2. Tap Services","The drawer opens and navigates to /app/services.","Playwright `tests/e2e/responsive.spec.ts` (Mobile Chrome)","Pass"
