@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BookFlow QA · Test reports</title>
+    <meta
+      name="description"
+      content="Live test reports for BookFlow: Playwright E2E, accessibility and API tests, Postman/Newman collection, test plan and test cases."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #e5e7eb;
+        --accent: #3451d1;
+        --pass: #11704a;
+        --pass-bg: #e7f5ee;
+        --fail: #b42318;
+        --fail-bg: #fdecea;
+        --warn: #8a5300;
+        --warn-bg: #fff4e0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --surface: #161b22;
+          --ink: #e6edf3;
+          --muted: #a3acb9;
+          --line: #30363d;
+          --accent: #8ea2ff;
+          --pass: #5fd49b;
+          --pass-bg: #10291d;
+          --fail: #ff8b7e;
+          --fail-bg: #331412;
+          --warn: #f2c46d;
+          --warn-bg: #2d2210;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.55 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 16px 64px;
+      }
+      .eyebrow {
+        font:
+          600 12px/1 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 {
+        font-size: clamp(32px, 6vw, 44px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        margin: 12px 0 12px;
+      }
+      .lead {
+        color: var(--muted);
+        max-width: 640px;
+        margin: 0 0 8px;
+      }
+      .meta {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      a {
+        color: var(--accent);
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin: 32px 0;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px;
+      }
+      .card h2 {
+        font-size: 15px;
+        margin: 0 0 4px;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .big {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 12px 0 4px;
+        font-variant-numeric: tabular-nums;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+      .badge.pass {
+        color: var(--pass);
+        background: var(--pass-bg);
+      }
+      .badge.fail {
+        color: var(--fail);
+        background: var(--fail-bg);
+      }
+      .badge.warn {
+        color: var(--warn);
+        background: var(--warn-bg);
+      }
+      .btn {
+        display: inline-block;
+        margin-top: 14px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .btn:hover {
+        text-decoration: underline;
+      }
+      h3 {
+        font-size: 13px;
+        margin: 40px 0 12px;
+      }
+      ul.links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      ul.links a {
+        display: block;
+        height: 100%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        text-decoration: none;
+        color: var(--ink);
+      }
+      ul.links a:hover,
+      ul.links a:focus-visible {
+        border-color: var(--accent);
+      }
+      ul.links strong {
+        display: block;
+        font-size: 15px;
+      }
+      ul.links span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      footer {
+        margin-top: 48px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Quality reports · BookFlow</p>
+      <h1>BookFlow QA</h1>
+      <p class="lead">
+        Test plan, test cases and automated suites (Playwright E2E, accessibility, API and
+        Postman/Newman) running against the live
+        <a href="https://bookflow-phi-ivory.vercel.app">BookFlow demo</a> on every push and every
+        day.
+      </p>
+      <p class="meta">
+        Last run: <time datetime="{{RUN_ISO}}">{{RUN_DATE}}</time> ·
+        <a href="{{RUN_URL}}">workflow run</a> · commit <code>{{COMMIT}}</code>
+      </p>
+
+      <section class="status" aria-label="Latest results">
+        <div class="card">
+          <h2>Playwright · E2E, a11y and API</h2>
+          <p>Chromium, Firefox and Mobile Chrome</p>
+          <p class="big">{{PW_PASSED}} / {{PW_TOTAL}}</p>
+          <span class="badge {{PW_CLASS}}">{{PW_LABEL}}</span>
+          <p style="margin-top: 8px">{{PW_DETAIL}}</p>
+          <a class="btn" href="playwright/">Open the Playwright report →</a>
+        </div>
+        <div class="card">
+          <h2>Newman · Postman collection</h2>
+          <p>{{NM_REQUESTS}} requests against the REST API</p>
+          <p class="big">{{NM_PASSED}} / {{NM_TOTAL}}</p>
+          <span class="badge {{NM_CLASS}}">{{NM_LABEL}}</span>
+          <p style="margin-top: 8px">assertions passed</p>
+          <a class="btn" href="newman/">Open the Newman report →</a>
+        </div>
+      </section>
+
+      <h3 class="eyebrow">Documentation</h3>
+      <ul class="links">
+        <li>
+          <a href="{{REPO}}/blob/main/docs/test-plan.md"
+            ><strong>Test plan</strong
+            ><span>Scope, approach, environments, risks, traceability</span></a
+          >
+        </li>
+        <li>
+          <a href="{{REPO}}/blob/main/docs/test-cases.md"
+            ><strong>Test cases</strong
+            ><span>Manual cases with EP, BVA and a decision table</span></a
+          >
+        </li>
+        <li>
+          <a href="{{REPO}}/blob/main/docs/test-summary-report.md"
+            ><strong>Test summary report</strong
+            ><span>Results, coverage and recommendations</span></a
+          >
+        </li>
+        <li>
+          <a href="{{REPO}}/blob/main/docs/bug-reports.md"
+            ><strong>Bug reports</strong><span>Defects filed in the BookFlow repository</span></a
+          >
+        </li>
+        <li>
+          <a href="{{REPO}}"
+            ><strong>Source code</strong><span>Page objects, fixtures, CI workflows</span></a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/lucaswsanchez/bookflow"
+            ><strong>Application under test</strong
+            ><span>BookFlow: NestJS + React booking app</span></a
+          >
+        </li>
+      </ul>
+
+      <footer>
+        Built by <a href="https://github.com/lucaswsanchez">Lucas Sanchez</a>. Reports are
+        regenerated by GitHub Actions; the API runs on Render's free tier, so each run starts with a
+        warm-up.
+      </footer>
+    </main>
+  </body>
+</html>

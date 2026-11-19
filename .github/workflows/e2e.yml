@@ -1,0 +1,118 @@
+name: E2E against live demo
+
+# Runs the Playwright and Newman suites against the deployed BookFlow demo
+# and publishes both HTML reports to GitHub Pages.
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Daily at 07:00 UTC, one hour after BookFlow's nightly demo reseed (06:00 UTC).
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never run two suites at once against the shared demo (rate limits, free tier).
+concurrency:
+  group: e2e-live
+  cancel-in-progress: false
+
+env:
+  WEB_URL: https://bookflow-phi-ivory.vercel.app
+  API_URL: https://bookflow-api-f8qe.onrender.com
+
+jobs:
+  warmup:
+    name: Wake up Render API
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/warmup.mjs
+
+  playwright:
+    name: Playwright (E2E, a11y, API)
+    needs: warmup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium firefox
+      - run: node scripts/warmup.mjs
+      - run: pnpm test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: |
+            reports/playwright
+            reports/playwright-results.json
+          retention-days: 14
+
+  newman:
+    name: Newman (Postman collection)
+    # Runs after Playwright, so login requests from both suites never hit the rate limit together.
+    needs: playwright
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/warmup.mjs
+      - run: pnpm newman
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: newman-report
+          path: reports/newman
+          retention-days: 14
+
+  publish:
+    name: Publish reports to GitHub Pages
+    needs: [playwright, newman]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: reports
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: newman-report
+          path: reports/newman
+        continue-on-error: true
+      - run: node scripts/build-site.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
