@@ -13,7 +13,7 @@ import type { Role } from './api-client';
  * to the browser or API client and, on teardown, writes back the newest token from the chain.
  */
 export const POOL_DIR = path.join(__dirname, '..', '..', 'playwright', '.auth', 'pool');
-export const POOL_SIZE: Record<Role, number> = { admin: 3, staff: 2 };
+export const POOL_SIZE: Record<Role, number> = { admin: 2, staff: 1 };
 
 const tokenFile = (role: Role, slot: number) => path.join(POOL_DIR, `${role}-${slot}.token`);
 const lockDir = (role: Role, slot: number) => path.join(POOL_DIR, `${role}-${slot}.lock`);

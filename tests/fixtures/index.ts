@@ -16,7 +16,7 @@ const REFRESH_KEY = 'bookflow.refreshToken';
  * Turns a leased slot into a fresh token pair. Refresh is not rate limited; a login is only
  * needed when the slot's token was revoked (for example by a logout or an interrupted test).
  */
-async function freshTokens(request: APIRequestContext, lease: Lease) {
+export async function freshTokens(request: APIRequestContext, lease: Lease) {
   const api = new BookFlowApi(request);
   if (lease.refreshToken) {
     const res = await api.post('/auth/refresh', { refreshToken: lease.refreshToken });
@@ -26,7 +26,7 @@ async function freshTokens(request: APIRequestContext, lease: Lease) {
 }
 
 /** Gets an authenticated API client from the session pool. */
-async function authenticatedApi(request: APIRequestContext, role: Role) {
+export async function authenticatedApi(request: APIRequestContext, role: Role) {
   const lease = await checkout(role);
   try {
     const tokens = await freshTokens(request, lease);

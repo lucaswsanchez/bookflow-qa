@@ -24,4 +24,9 @@ export default tseslint.config(
       'playwright/expect-expect': ['warn', { assertFunctionNames: ['expectError', 'expect*'] }],
     },
   },
+  {
+    // API specs branch on status codes for cleanup and data discovery; that is intended.
+    files: ['tests/api/**/*.ts'],
+    rules: { 'playwright/no-conditional-in-test': 'off' },
+  },
 );
