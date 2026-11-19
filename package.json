@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "newman:local": "newman run postman/bookflow.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\""
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
