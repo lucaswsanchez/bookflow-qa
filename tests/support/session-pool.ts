@@ -9,14 +9,38 @@ import type { Role } from './api-client';
  *   file would be invalid after the first test.
  *
  * The auth setup project logs in a few times per role and stores one refresh token per slot.
- * A test checks out a free slot (an atomic mkdir works as a cross-process lock), hands the token
- * to the browser or API client and, on teardown, writes back the newest token from the chain.
+ * A browser test checks out a free slot (an atomic mkdir works as a cross-process lock), hands the
+ * token to the browser and, on teardown, writes back the newest token from the chain.
+ *
+ * API clients don't need a slot: access tokens are not rotated, so one short-lived access token per
+ * role is shared by every worker (see readAccess/saveAccess). Holding a slot only in browser tests
+ * also avoids a deadlock where every test holds a slot and waits for a second one.
  */
 export const POOL_DIR = path.join(__dirname, '..', '..', 'playwright', '.auth', 'pool');
 export const POOL_SIZE: Record<Role, number> = { admin: 2, staff: 1 };
 
 const tokenFile = (role: Role, slot: number) => path.join(POOL_DIR, `${role}-${slot}.token`);
 const lockDir = (role: Role, slot: number) => path.join(POOL_DIR, `${role}-${slot}.lock`);
+const accessFile = (role: Role) => path.join(POOL_DIR, `${role}.access.json`);
+/** A lock older than this belongs to a crashed worker (tests time out after 60-90 s). */
+const STALE_LOCK_MS = 150_000;
+
+export function saveAccess(role: Role, accessToken: string, expiresInSeconds: number) {
+  const data = { accessToken, expiresAt: Date.now() + expiresInSeconds * 1000 };
+  const tmp = `${accessFile(role)}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data));
+  fs.renameSync(tmp, accessFile(role)); // atomic replace: readers never see a partial file
+}
+
+/** Shared access token for API clients, or null when missing or about to expire. */
+export function readAccess(role: Role): string | null {
+  try {
+    const { accessToken, expiresAt } = JSON.parse(fs.readFileSync(accessFile(role), 'utf8'));
+    return expiresAt - Date.now() > 60_000 ? accessToken : null;
+  } catch {
+    return null;
+  }
+}
 
 export function resetPool() {
   fs.rmSync(POOL_DIR, { recursive: true, force: true });
@@ -43,6 +67,12 @@ export async function checkout(role: Role, timeoutMs = 120_000): Promise<Lease> 
       try {
         fs.mkdirSync(lockDir(role, slot));
       } catch {
+        try {
+          if (Date.now() - fs.statSync(lockDir(role, slot)).mtimeMs > STALE_LOCK_MS)
+            fs.rmSync(lockDir(role, slot), { recursive: true, force: true });
+        } catch {
+          // lock released meanwhile
+        }
         continue; // slot busy
       }
       const file = tokenFile(role, slot);
