@@ -22,7 +22,9 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "newman:local": "newman run postman/bookflow.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra,json --reporter-json-export reports/newman/results.json --reporter-htmlextra-export reports/newman/index.html --reporter-htmlextra-title \"BookFlow API - Newman report\"",
-    "build:site": "node scripts/build-site.mjs"
+    "build:site": "node scripts/build-site.mjs",
+    "generate:postman": "node scripts/generate-postman-collection.mjs && prettier --write postman/bookflow.postman_collection.json",
+    "generate:test-cases": "node scripts/generate-test-cases.mjs && prettier --write docs/test-cases.md"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

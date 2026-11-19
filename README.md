@@ -108,7 +108,7 @@ bookflow-qa/
 ├── postman/              collection + live and local environments
 ├── k6/                   local-only load example
 ├── site/                 GitHub Pages landing template
-├── scripts/              Render warm-up, Pages site builder
+├── scripts/              Render warm-up, Pages site builder, collection and test case generators
 └── .github/              CI and E2E workflows, bug report template
 ```
 
@@ -166,6 +166,11 @@ No secrets are needed: the only credentials are BookFlow's public demo accounts.
 | `pnpm report`                                        | Opens the last HTML report (`reports/playwright`)                              |
 | `pnpm newman`                                        | Runs the Postman collection against the live demo (report in `reports/newman`) |
 | `pnpm lint` · `pnpm format:check` · `pnpm typecheck` | Static checks (the same as CI on every PR)                                     |
+
+The Postman collection and the test case docs are generated from code, so they can be reviewed as diffs:
+
+- `pnpm generate:postman` rebuilds `postman/bookflow.postman_collection.json` from `scripts/generate-postman-collection.mjs`;
+- `pnpm generate:test-cases` rebuilds `docs/test-cases.md` and `docs/test-cases.csv` from `scripts/generate-test-cases.mjs`.
 
 The suite is also importable into Postman: `postman/bookflow.postman_collection.json` + `postman/live.postman_environment.json`.
 
