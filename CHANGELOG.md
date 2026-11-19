@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Generator scripts for the Postman collection and the test case docs (`pnpm generate:postman`,
+  `pnpm generate:test-cases`), so both can be rebuilt from source.
+
 ## [1.0.0] - 2026-11-19
 
 ### Added
