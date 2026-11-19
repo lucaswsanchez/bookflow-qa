@@ -4,29 +4,28 @@ import { expect, test } from '../fixtures';
 /**
  * Automated WCAG 2.1 A/AA scan with axe-core on the three public pages.
  *
- * Gate: no "critical" or "serious" violations, except the ones in KNOWN, which are already
- * reported as bugs. A known violation that disappears makes the test fail too, as a reminder to
- * close the bug and tighten the baseline. Every result is attached to the HTML report.
+ * Gate: no "critical" or "serious" violations, except the ones in `known`, which must already be
+ * reported as bugs (none today: the contrast bug bookflow#60 was fixed). A known violation that
+ * disappears makes the test fail too, as a reminder to close the bug and tighten the baseline.
+ * Every result is attached to the HTML report.
  *
  * Automated scans catch only part of accessibility problems: the manual keyboard and screen
  * reader checks are in docs/test-cases.md (TC-UX-*).
  */
-const CONTRAST_BUG = 'https://github.com/lucaswsanchez/bookflow/issues/60';
-
 const PAGES = [
   {
     id: 'TC-A11Y-01',
     name: 'landing page',
     path: '/',
     ready: 'cta-book-demo',
-    known: { 'color-contrast': CONTRAST_BUG },
+    known: {},
   },
   {
     id: 'TC-A11Y-02',
     name: 'booking page',
     path: '/book/barberia-costanera',
     ready: 'service-list',
-    known: { 'color-contrast': CONTRAST_BUG },
+    known: {},
   },
   { id: 'TC-A11Y-03', name: 'login page', path: '/login', ready: 'login-form', known: {} },
 ];

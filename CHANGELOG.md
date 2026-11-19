@@ -4,12 +4,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-11-19
 
 ### Added
 
+- TC-API-12: automated regression test for bookflow#59 (phone without digits, blank name).
 - Generator scripts for the Postman collection and the test case docs (`pnpm generate:postman`,
   `pnpm generate:test-cases`), so both can be rebuilt from source.
+
+### Changed
+
+- Retested the 4 defects after BookFlow fixed them (#57–#60): removed the `test.fail()` marks and the
+  color-contrast baseline, and TC-API-11 now checks the new price maximum (10,000,000).
+- Test cases: 47 pass, 0 fail, 1 not run (42 automated). Bug reports, summary report and README updated.
 
 ## [1.0.0] - 2026-11-19
 
@@ -32,4 +39,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Session pool deadlock when several workers ran admin tests in parallel.
 
+[1.1.0]: https://github.com/lucaswsanchez/bookflow-qa/releases/tag/v1.1.0
 [1.0.0]: https://github.com/lucaswsanchez/bookflow-qa/releases/tag/v1.0.0

@@ -90,35 +90,65 @@ test.describe('API: public booking', () => {
 });
 
 /*
- * Regression checks for defects found during exploratory testing (see docs/bug-reports.md).
- * They are marked with test.fail(): they pass while the bug exists and will turn red once the
- * bug is fixed, as a reminder to remove the annotation.
+ * Regression tests for defects found during exploratory testing (see docs/bug-reports.md).
+ * All of them were fixed in BookFlow; these tests keep them from coming back.
  */
-test.describe('API: known defects', () => {
+test.describe('API: regression of fixed defects', () => {
   test('TC-API-10 impossible calendar dates in /appointments return 400', async ({ adminApi }) => {
     test.info().annotations.push({
       type: 'issue',
-      description: 'https://github.com/lucaswsanchez/bookflow/issues/57',
+      description: 'https://github.com/lucaswsanchez/bookflow/issues/57 (fixed)',
     });
-    test.fail(true, 'Known bug lucaswsanchez/bookflow#57: returns 500 instead of 400');
-    await expectError(await adminApi.get('/appointments?from=2026-02-30'), 400);
+    for (const path of [
+      '/appointments?from=2026-02-30',
+      '/appointments?from=2026-13-45',
+      '/appointments/export?from=2026-02-30',
+    ])
+      await expectError(await adminApi.get(path), 400);
   });
 
-  test('TC-API-11 a service price above the 32-bit integer limit returns 400', async ({
-    adminApi,
+  test('TC-API-11 a service price above the maximum returns 400', async ({ adminApi }) => {
+    test.info().annotations.push({
+      type: 'issue',
+      description: 'https://github.com/lucaswsanchez/bookflow/issues/58 (fixed)',
+    });
+    // Boundary: 10,000,000 is the maximum. 2,147,483,648 is the value that used to cause a 500.
+    const max = await adminApi.createService({ name: 'QA Price Max', price: 10_000_000 });
+    await adminApi.deleteService(max.id);
+    for (const price of [10_000_001, 2_147_483_648]) {
+      const res = await adminApi.post('/services', {
+        name: 'QA Price Overflow',
+        durationMinutes: 30,
+        price,
+        active: false,
+      });
+      if (res.status() === 201) await adminApi.deleteService((await res.json()).id);
+      await expectError(res, 400);
+    }
+  });
+
+  test('TC-API-12 booking rejects a phone without digits and a blank name', async ({
+    publicApi,
   }) => {
     test.info().annotations.push({
       type: 'issue',
-      description: 'https://github.com/lucaswsanchez/bookflow/issues/58',
+      description: 'https://github.com/lucaswsanchez/bookflow/issues/59 (fixed)',
     });
-    test.fail(true, 'Known bug lucaswsanchez/bookflow#58: returns 500 instead of 400');
-    const res = await adminApi.post('/services', {
-      name: 'QA Price Overflow',
-      durationMinutes: 30,
-      price: 2_147_483_648,
-      active: false,
-    });
-    if (res.status() === 201) await adminApi.deleteService((await res.json()).id);
-    await expectError(res, 400);
+    const serviceId = (await publicApi.publicServices()).find(
+      (s) => s.name === 'Classic Haircut',
+    )!.id;
+    const staffId = (await publicApi.publicStaff(serviceId))[0].id;
+    const book = (client: object) =>
+      publicApi.post(`${PUB}/bookings`, {
+        serviceId,
+        staffId,
+        startsAt: '2030-01-01T12:00:00.000Z',
+        client: { ...QA_CLIENT, ...client },
+      });
+
+    const phone = await expectError(await book({ phone: '------' }), 400);
+    expect(JSON.stringify(phone.message)).toContain('client.phone');
+    const name = await expectError(await book({ name: '   ' }), 400);
+    expect(JSON.stringify(name.message)).toContain('client.name');
   });
 });

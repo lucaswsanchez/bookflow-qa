@@ -35,9 +35,9 @@ app for small businesses ([live demo](https://bookflow-phi-ivory.vercel.app),
 | Test plan     | [docs/test-plan.md](docs/test-plan.md)                                | Feature map (routes and 32 endpoints), scope, approach, environments, entry/exit criteria, risks, traceability matrix                             |
 | Test cases    | [docs/test-cases.md](docs/test-cases.md) · [CSV](docs/test-cases.csv) | 48 cases: functional, negative, boundary and usability, with equivalence partitioning, boundary values and a decision table for slot availability |
 | E2E tests     | [tests/e2e](tests/e2e)                                                | 28 Playwright tests with the Page Object Model on Chromium, Firefox and Mobile Chrome                                                             |
-| Accessibility | [tests/a11y](tests/a11y)                                              | axe-core WCAG 2.1 A/AA scan of 3 pages, with a baseline of reported issues                                                                        |
-| API tests     | [tests/api](tests/api) · [postman](postman)                           | 11 Playwright API tests + a Postman collection of 36 requests and 161 assertions run by Newman                                                    |
-| Bugs          | [docs/bug-reports.md](docs/bug-reports.md)                            | 4 real defects filed in the BookFlow repo, plus 6 suggested improvements                                                                          |
+| Accessibility | [tests/a11y](tests/a11y)                                              | axe-core WCAG 2.1 A/AA scan of 3 pages; no critical or serious violations allowed                                                                 |
+| API tests     | [tests/api](tests/api) · [postman](postman)                           | 12 Playwright API tests + a Postman collection of 36 requests and 161 assertions run by Newman                                                    |
+| Bugs          | [docs/bug-reports.md](docs/bug-reports.md)                            | 4 real defects filed in the BookFlow repo (all fixed and retested), plus 6 suggested improvements                                                 |
 | Results       | [docs/test-summary-report.md](docs/test-summary-report.md)            | Totals, coverage by feature, defects by severity, recommendations                                                                                 |
 | CI            | [.github/workflows](.github/workflows)                                | Lint on every PR; full suite on push, daily and on demand; reports on GitHub Pages                                                                |
 
@@ -54,8 +54,9 @@ app for small businesses ([live demo](https://bookflow-phi-ivory.vercel.app),
   - IDs are looked up at runtime.
 - **Selectors:** only `data-testid` or accessible roles and labels. There is no `waitForTimeout`: an ESLint rule
   turns it into an error.
-- **Known defects as checks:** reported bugs are tracked with `test.fail()` plus a link to the issue, and an
-  accessibility baseline. They turn red when a bug is fixed or a new one appears.
+- **Known defects as checks:** while a reported bug is open, it is tracked with `test.fail()` plus a link to the
+  issue, or with an accessibility baseline, so its test turns red when the bug is fixed. All 4 reported bugs are
+  fixed, and their tests are now plain regression tests.
 - **API contract checks:** status codes, JSON schema, the standard error body and 400/401/403/404/409, including a
   concurrent double-booking test that expects exactly one 201 and one 409.
 
@@ -196,7 +197,7 @@ The same structure maps directly to **Jira**:
 
 ## Roadmap
 
-- [ ] Re-run and close the defects once fixed in BookFlow (remove the `test.fail()` annotations and the a11y baseline).
+- [x] Re-run and close the defects once fixed in BookFlow (remove the `test.fail()` annotations and the a11y baseline).
 - [ ] UI tests for staff and clients CRUD, the agenda views and reports.
 - [ ] Visual regression snapshots of the booking page.
 - [ ] Rate-limit (429) test against a local or dedicated QA environment.
@@ -213,7 +214,8 @@ Summary; full reasoning in [docs/technical-decisions.md](docs/technical-decision
 3. **A shared demo needs a data policy.** QA prefixes, far-future dates, cleanup in teardown and one professional
    per browser project keep runs independent and the demo clean for visitors.
 4. **Known bugs should be executable.** `test.fail()` with a link to the issue, plus an accessibility baseline,
-   keep the pipeline green without hiding the defects.
+   keep the pipeline green without hiding the defects. When BookFlow fixed them, those tests went red and
+   pointed straight at what to update.
 5. **Explore first, then automate.** Three of the four defects came from an exploratory session of boundary and
    partition checks on the API, before any E2E test existed; the fourth came from the axe scan. Automation then
    locked them in as regression checks.

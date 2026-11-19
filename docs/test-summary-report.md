@@ -2,7 +2,7 @@
 
 |                        |                                                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Version under test** | BookFlow `main` @ `5433f11` (live demo: Vercel + Render + Supabase)                                                        |
+| **Version under test** | BookFlow `main` @ `5433f11` (live demo: Vercel + Render + Supabase); retest of the fixes on `e34dce2`                      |
 | **Test period**        | 2026-11-19                                                                                                                 |
 | **Reference run**      | GitHub Actions [run 44608303196](https://github.com/lucaswsanchez/bookflow-qa/actions/runs/44608303196) (commit `dcbcf27`) |
 | **Latest reports**     | https://lucaswsanchez.github.io/bookflow-qa/ (updated on every push and daily)                                             |
@@ -23,6 +23,9 @@ validation of client data, and color contrast below WCAG AA on two public pages.
 
 **Recommendation:** the release meets the exit criteria in the [test plan](test-plan.md#6-entry-and-exit-criteria)
 (no Critical/Major defects, all High priority cases run). Fix #60 (accessibility, P2) first, then #57–#59.
+
+**Update (retest):** BookFlow fixed all 4 defects (`e34dce2`). They were retested on the live demo and pass. With
+the fixes, the test cases stand at **47 pass, 0 fail, 1 not run**. See [section 7](#7-retest-after-the-fixes).
 
 ## 2. Execution results
 
@@ -94,7 +97,7 @@ Roadmap).
 | Minor    | 4     | [#57](https://github.com/lucaswsanchez/bookflow/issues/57) 500 on impossible dates · [#58](https://github.com/lucaswsanchez/bookflow/issues/58) 500 on price overflow · [#59](https://github.com/lucaswsanchez/bookflow/issues/59) phone/name validation · [#60](https://github.com/lucaswsanchez/bookflow/issues/60) color contrast |
 | Trivial  | 0     |                                                                                                                                                                                                                                                                                                                                      |
 
-By priority: P2 ×1 (#60), P3 ×3. All open at the time of this report. Details and 6 suggested improvements:
+By priority: P2 ×1 (#60), P3 ×3. All open at the time of this report; all fixed and retested later (section 7). Details and 6 suggested improvements:
 [bug-reports.md](bug-reports.md).
 
 ## 5. Recommendations
@@ -115,3 +118,25 @@ By priority: P2 ×1 (#60), P3 ×3. All open at the time of this report. Details 
 - About 8 logins per run (session pool) keep the suite under the 10/min/IP login limit.
 - All QA bookings are cancelled after each test and QA services deleted. After the reference run, 0 QA services and
   0 active QA bookings were left in the demo.
+
+## 7. Retest after the fixes
+
+BookFlow fixed the 4 defects in PRs [#61](https://github.com/lucaswsanchez/bookflow/pull/61) to
+[#64](https://github.com/lucaswsanchez/bookflow/pull/64), deployed as `main` @ `e34dce2`. Retest on 2026-11-19:
+
+| Defect                        | Test                              | Result                                                     |
+| ----------------------------- | --------------------------------- | ---------------------------------------------------------- |
+| #57 impossible dates          | TC-AP-06 / TC-API-10              | ✅ 400 on `/appointments` and `/appointments/export`       |
+| #58 price overflow            | TC-SV-04 / TC-API-11              | ✅ 10,000,000 accepted; 10,000,001 and 2,147,483,648 → 400 |
+| #59 phone and name validation | TC-BK-07 / TC-API-12 (new)        | ✅ 400 for phone `------` and name `"   "`                 |
+| #60 color contrast            | TC-UX-02 / TC-A11Y-01, TC-A11Y-02 | ✅ no critical or serious axe violations                   |
+
+The suite flagged the fixes on its own: the a11y scans failed with "known violations that are now fixed" until the
+baseline was removed, as designed. The `test.fail()` marks were removed too.
+
+| Total | Executed | Pass                  | Fail | Not run                  |
+| ----- | -------- | --------------------- | ---- | ------------------------ |
+| 48    | 47 (98%) | 47 (100% of executed) | 0    | 1 (TC-AU-07, rate limit) |
+
+There are now 43 unique automated tests (28 E2E, 3 accessibility, 12 API). The 6 suggested improvements are open in
+BookFlow as `enhancement` issues (#65–#70).

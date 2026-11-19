@@ -139,10 +139,13 @@ const C = [
     'Equivalence partitioning',
     'Medium',
     'Admin access token.',
-    ['POST /clients with phone "------"'],
-    '400 Bad Request: a phone needs digits.',
-    'Exploratory API session (2026-11-19)',
-    'Fail: lucaswsanchez/bookflow#59',
+    [
+      'POST /public/businesses/:slug/bookings with phone "------"',
+      'Same with name "   " (only spaces)',
+    ],
+    '400 Bad Request: a phone needs digits and a name needs real characters.',
+    PW('api/booking.api.spec.ts') + ' (TC-API-12)',
+    'Pass (lucaswsanchez/bookflow#59 fixed)',
   ],
   [
     'TC-BK-08',
@@ -543,8 +546,8 @@ const C = [
     'Admin token.',
     ['GET /appointments?from=2026-02-30', 'GET /appointments?from=2026-13-45'],
     '400 Bad Request.',
-    PW('api/booking.api.spec.ts') + ' (test.fail)',
-    'Fail: lucaswsanchez/bookflow#57 (returns 500)',
+    PW('api/booking.api.spec.ts') + ' (TC-API-10)',
+    'Pass (lucaswsanchez/bookflow#57 fixed)',
   ],
 
   // ---------- Services ----------
@@ -593,16 +596,20 @@ const C = [
   ],
   [
     'TC-SV-04',
-    'Price above the 32-bit integer limit is rejected',
+    'Price above the maximum (10,000,000) is rejected',
     'US-10',
     'Boundary',
     'Boundary value analysis',
     'Low',
     'Admin token.',
-    ['POST /services with price 2147483648'],
-    '400 Bad Request.',
-    PW('api/booking.api.spec.ts') + ' (test.fail)',
-    'Fail: lucaswsanchez/bookflow#58 (returns 500)',
+    [
+      'POST /services with price 10000000',
+      'POST /services with price 10000001',
+      'POST /services with price 2147483648',
+    ],
+    '10,000,000 is accepted; the two higher prices get 400 Bad Request.',
+    PW('api/booking.api.spec.ts') + ' (TC-API-11)',
+    'Pass (lucaswsanchez/bookflow#58 fixed)',
   ],
 
   // ---------- UX / a11y / responsive ----------
@@ -633,9 +640,9 @@ const C = [
     'High',
     'None.',
     ['Scan landing, booking and login pages'],
-    'No critical/serious violations outside the documented baseline.',
+    'No critical/serious violations.',
     PW('a11y/accessibility.spec.ts'),
-    'Pass with known issue lucaswsanchez/bookflow#60 (color contrast)',
+    'Pass (lucaswsanchez/bookflow#60 fixed)',
   ],
   [
     'TC-RS-01',
@@ -701,7 +708,7 @@ Jira (Xray/Zephyr), TestRail or a spreadsheet.
 ### Equivalence partitioning: client details (booking form)
 | Field | Valid classes | Invalid classes | Cases |
 |---|---|---|---|
-| Name | 2–80 characters after trimming | empty; 1 character; only spaces; > 80 | TC-BK-04, TC-BK-05a |
+| Name | 2–80 characters after trimming | empty; 1 character; only spaces; > 80 | TC-BK-04, TC-BK-05a, TC-BK-07 |
 | Phone | 6–20 of \`+ 0-9 space ( ) -\` | empty; contains letters; < 6 chars; **no digits at all** | TC-BK-04, TC-BK-05b, TC-BK-05c, TC-BK-07 |
 | Email (optional) | empty; valid address | malformed (\`user@\`) | TC-BK-04, TC-BK-05d |
 
@@ -714,7 +721,7 @@ Jira (Xray/Zephyr), TestRail or a spreadsheet.
 | Service duration 5–480 min | 4 ✗ | 5 ✓ / 480 ✓ | 481 ✗ | TC-SV-02 |
 | Booking horizon (days ahead) | | 60 ✓ | 61 ✗ | TC-AV-07 |
 | Last slot of a range (Lucía 10:00–18:00, 90 min) | | 16:30 ✓ | 16:45 ✗ | TC-AV-02 |
-| Service price (32-bit column) | | 2,147,483,647 | 2,147,483,648 → 500 ✗ (bug) | TC-SV-04 |
+| Service price ≤ 10,000,000 | | 10,000,000 ✓ | 10,000,001 ✗ · 2,147,483,648 ✗ (was a 500, #58) | TC-SV-04 |
 | Login attempts per minute | | 10 ✓ | 11 → 429 | TC-AU-07 |
 
 ### Decision table: is a time slot offered?

@@ -7,12 +7,12 @@ actual result, severity, priority, evidence and a suggested fix.
 
 ## Defects
 
-| ID                                                                 | Title                                                                                              | Severity | Priority | Found by                               | Regression test                   | Status |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------- | -------- | -------------------------------------- | --------------------------------- | ------ |
-| [bookflow#57](https://github.com/lucaswsanchez/bookflow/issues/57) | API returns 500 for impossible calendar dates in `GET /appointments` (also `/appointments/export`) | Minor    | P3       | Exploratory API testing (BVA on dates) | TC-API-10 (`test.fail`)           | Open   |
-| [bookflow#58](https://github.com/lucaswsanchez/bookflow/issues/58) | API returns 500 when a service price exceeds the 32-bit integer limit                              | Minor    | P3       | Boundary value analysis                | TC-API-11 (`test.fail`)           | Open   |
-| [bookflow#59](https://github.com/lucaswsanchez/bookflow/issues/59) | Client phone and name validation accept values without real content (`------`, `"   "`)            | Minor    | P3       | Equivalence partitioning               | TC-BK-07 (manual)                 | Open   |
-| [bookflow#60](https://github.com/lucaswsanchez/bookflow/issues/60) | Color contrast below WCAG AA on the booking and landing pages                                      | Minor    | P2       | axe-core scan                          | TC-A11Y-01, TC-A11Y-02 (baseline) | Open   |
+| ID                                                                 | Title                                                                                              | Severity | Priority | Found by                               | Regression test        | Status              |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------- | -------- | -------------------------------------- | ---------------------- | ------------------- |
+| [bookflow#57](https://github.com/lucaswsanchez/bookflow/issues/57) | API returns 500 for impossible calendar dates in `GET /appointments` (also `/appointments/export`) | Minor    | P3       | Exploratory API testing (BVA on dates) | TC-API-10              | Fixed (bookflow#61) |
+| [bookflow#58](https://github.com/lucaswsanchez/bookflow/issues/58) | API returns 500 when a service price exceeds the 32-bit integer limit                              | Minor    | P3       | Boundary value analysis                | TC-API-11              | Fixed (bookflow#62) |
+| [bookflow#59](https://github.com/lucaswsanchez/bookflow/issues/59) | Client phone and name validation accept values without real content (`------`, `"   "`)            | Minor    | P3       | Equivalence partitioning               | TC-BK-07, TC-API-12    | Fixed (bookflow#63) |
+| [bookflow#60](https://github.com/lucaswsanchez/bookflow/issues/60) | Color contrast below WCAG AA on the booking and landing pages                                      | Minor    | P2       | axe-core scan                          | TC-A11Y-01, TC-A11Y-02 | Fixed (bookflow#64) |
 
 **By severity:** Critical 0 · Major 0 · Minor 4 · Trivial 0.
 
@@ -20,13 +20,34 @@ None of them blocks the main journeys: booking, login, roles, status changes and
 The two 500 errors matter because a 5xx is counted as a server failure in logs and monitoring, and it hides the
 real cause from API clients.
 
-### How the known defects are handled in the automated suites
+### Retest (2026-11-19, BookFlow `main` @ `e34dce2`)
 
-- **API defects** (#57, #58) have regression tests marked with `test.fail()` and an `issue` annotation that links
-  to the issue. They pass while the bug exists. Once the bug is fixed they turn red, as a reminder to remove the
-  annotation, so the fix is verified automatically.
-- **Accessibility** (#60) is a baseline in `tests/a11y/accessibility.spec.ts`. A new critical or serious violation
-  fails the test. So does a known one that disappears, so that the baseline is tightened when the issue is closed.
+All 4 defects were fixed in BookFlow and retested against the live demo:
+
+| Defect | Fix                                                       | Retest                                                                            |
+| ------ | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| #57    | Dates are validated as real calendar dates                | `2026-02-30` and `2026-13-45` on `/appointments` and `/appointments/export` → 400 |
+| #58    | Price has a maximum of 10,000,000 (a realistic ARS limit) | 10,000,000 → 201; 10,000,001 and 2,147,483,648 → 400                              |
+| #59    | Phone needs at least 6 digits; name and phone are trimmed | phone `------` and name `"   "` → 400                                             |
+| #60    | Darker secondary text and accent tones                    | axe scans of the landing and booking pages: no critical or serious violations     |
+
+### How the defects were handled in the automated suites
+
+While the bugs were open:
+
+- **API defects** (#57, #58) had regression tests marked with `test.fail()` and an `issue` annotation that links
+  to the issue. They passed while the bug existed.
+- **Accessibility** (#60) was a baseline in `tests/a11y/accessibility.spec.ts`. A new critical or serious violation
+  failed the test, and so did a known one that disappeared.
+
+When BookFlow deployed the fixes, the a11y scans failed with "known violations that are now fixed", as designed. The
+`test.fail()` marks and the baseline were then removed, and #59 got an automated test (TC-API-12). All of them are
+now plain regression tests.
+
+The 6 suggestions below are open in BookFlow as `enhancement` issues: S-01
+[#65](https://github.com/lucaswsanchez/bookflow/issues/65), S-02 [#66](https://github.com/lucaswsanchez/bookflow/issues/66),
+S-03 [#67](https://github.com/lucaswsanchez/bookflow/issues/67), S-04 [#68](https://github.com/lucaswsanchez/bookflow/issues/68),
+S-05 [#69](https://github.com/lucaswsanchez/bookflow/issues/69), S-06 [#70](https://github.com/lucaswsanchez/bookflow/issues/70).
 
 ## Suggested improvements (not defects)
 
