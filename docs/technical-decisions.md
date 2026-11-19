@@ -45,6 +45,9 @@ Reported API defects have tests marked `test.fail()` with a link to the issue. A
 known violations. Both pass while the defect exists and fail when it changes, so a fix (or a new problem) can't go
 unnoticed, and the pipeline stays green for unrelated changes.
 
+This worked as intended: when BookFlow fixed #57–#60, the a11y scans failed with "known violations that are now
+fixed", and the `test.fail()` checks turned into plain regression tests (TC-API-10 to TC-API-12).
+
 ## 5. Postman/Newman next to Playwright API tests
 
 They overlap on purpose, but they serve different audiences:

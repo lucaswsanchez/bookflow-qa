@@ -4,8 +4,8 @@ Test cases for **BookFlow** (version on `main` @ `5433f11`, live demo), written 
 automated where it pays off. IDs match the automated tests (`TC-BK-01 ...` appears in the Playwright test titles),
 so a failing test points straight to its case.
 
-**48 test cases** · 41 automated (Playwright and/or Newman) · last execution on 2026-11-19:
-**44 pass, 3 fail, 1 not run**. Also available as [CSV](test-cases.csv) to import into
+**48 test cases** · 42 automated (Playwright and/or Newman) · last execution on 2026-11-19:
+**47 pass, 0 fail, 1 not run**. Also available as [CSV](test-cases.csv) to import into
 Jira (Xray/Zephyr), TestRail or a spreadsheet.
 
 **Types:** Functional, Negative, Boundary, Usability. **Priority:** High, Medium, Low.
@@ -16,22 +16,22 @@ Jira (Xray/Zephyr), TestRail or a spreadsheet.
 
 | Field            | Valid classes                  | Invalid classes                                          | Cases                                    |
 | ---------------- | ------------------------------ | -------------------------------------------------------- | ---------------------------------------- |
-| Name             | 2–80 characters after trimming | empty; 1 character; only spaces; > 80                    | TC-BK-04, TC-BK-05a                      |
+| Name             | 2–80 characters after trimming | empty; 1 character; only spaces; > 80                    | TC-BK-04, TC-BK-05a, TC-BK-07            |
 | Phone            | 6–20 of `+ 0-9 space ( ) -`    | empty; contains letters; < 6 chars; **no digits at all** | TC-BK-04, TC-BK-05b, TC-BK-05c, TC-BK-07 |
 | Email (optional) | empty; valid address           | malformed (`user@`)                                      | TC-BK-04, TC-BK-05d                      |
 
 ### Boundary value analysis
 
-| Rule                                             | Below | On the boundary | Above                       | Cases     |
-| ------------------------------------------------ | ----- | --------------- | --------------------------- | --------- |
-| Name length 2–80                                 | 1 ✗   | 2 ✓             |                             | TC-BK-05a |
-| Phone length 6–20                                | 5 ✗   | 6 ✓             |                             | TC-BK-05c |
-| Password length ≥ 6 (login)                      | 5 ✗   | 6 ✓             |                             | TC-AU-03  |
-| Service duration 5–480 min                       | 4 ✗   | 5 ✓ / 480 ✓     | 481 ✗                       | TC-SV-02  |
-| Booking horizon (days ahead)                     |       | 60 ✓            | 61 ✗                        | TC-AV-07  |
-| Last slot of a range (Lucía 10:00–18:00, 90 min) |       | 16:30 ✓         | 16:45 ✗                     | TC-AV-02  |
-| Service price (32-bit column)                    |       | 2,147,483,647   | 2,147,483,648 → 500 ✗ (bug) | TC-SV-04  |
-| Login attempts per minute                        |       | 10 ✓            | 11 → 429                    | TC-AU-07  |
+| Rule                                             | Below | On the boundary | Above                                           | Cases     |
+| ------------------------------------------------ | ----- | --------------- | ----------------------------------------------- | --------- |
+| Name length 2–80                                 | 1 ✗   | 2 ✓             |                                                 | TC-BK-05a |
+| Phone length 6–20                                | 5 ✗   | 6 ✓             |                                                 | TC-BK-05c |
+| Password length ≥ 6 (login)                      | 5 ✗   | 6 ✓             |                                                 | TC-AU-03  |
+| Service duration 5–480 min                       | 4 ✗   | 5 ✓ / 480 ✓     | 481 ✗                                           | TC-SV-02  |
+| Booking horizon (days ahead)                     |       | 60 ✓            | 61 ✗                                            | TC-AV-07  |
+| Last slot of a range (Lucía 10:00–18:00, 90 min) |       | 16:30 ✓         | 16:45 ✗                                         | TC-AV-02  |
+| Service price ≤ 10,000,000                       |       | 10,000,000 ✓    | 10,000,001 ✗ · 2,147,483,648 ✗ (was a 500, #58) | TC-SV-04  |
+| Login attempts per minute                        |       | 10 ✓            | 11 → 429                                        | TC-AU-07  |
 
 ### Decision table: is a time slot offered?
 
@@ -70,7 +70,7 @@ separately by TC-AV-09.
 | [TC-BK-05c](#tc-bk-05c) | Phone shorter than 6 characters is rejected                                | US-01 | Boundary   | Medium   | Playwright `tests/e2e/booking.spec.ts`                                                                 | Pass                                                                      |
 | [TC-BK-05d](#tc-bk-05d) | Malformed email is rejected                                                | US-01 | Negative   | Medium   | Playwright `tests/e2e/booking.spec.ts`                                                                 | Pass                                                                      |
 | [TC-BK-06](#tc-bk-06)   | Unknown business shows an error state                                      | US-01 | Negative   | Low      | Playwright `tests/e2e/booking.spec.ts`                                                                 | Pass                                                                      |
-| [TC-BK-07](#tc-bk-07)   | Phone made only of symbols is rejected                                     | US-10 | Negative   | Medium   | Exploratory API session (2026-11-19)                                                                   | Fail: lucaswsanchez/bookflow#59                                           |
+| [TC-BK-07](#tc-bk-07)   | Phone made only of symbols is rejected                                     | US-10 | Negative   | Medium   | Playwright `tests/api/booking.api.spec.ts` (TC-API-12)                                                 | Pass (lucaswsanchez/bookflow#59 fixed)                                    |
 | [TC-BK-08](#tc-bk-08)   | Booking can be looked up by its code without exposing contact data         | US-01 | Functional | Medium   | Newman: "Look up the booking by code"                                                                  | Pass                                                                      |
 | [TC-AV-01](#tc-av-01)   | Decision table R1: free slot inside working hours is offered               | US-02 | Functional | High     | Newman: "Get availability 30 days ahead"; exploratory API session                                      | Pass                                                                      |
 | [TC-AV-02](#tc-av-02)   | Decision table R2: service must end before the range ends                  | US-02 | Boundary   | High     | Exploratory API session (2026-11-19)                                                                   | Pass                                                                      |
@@ -100,13 +100,13 @@ separately by TC-AV-09.
 | [TC-AP-03](#tc-ap-03)   | Status filter lists only that status                                       | US-07 | Functional | Medium   | Playwright `tests/e2e/appointments.spec.ts`                                                            | Pass                                                                      |
 | [TC-AP-04](#tc-ap-04)   | Invalid status value is rejected                                           | US-10 | Negative   | Medium   | Newman: "Update status with an invalid value (400)"                                                    | Pass                                                                      |
 | [TC-AP-05](#tc-ap-05)   | Appointments CSV export                                                    | US-07 | Functional | Medium   | Newman: "Export appointments as CSV"                                                                   | Pass                                                                      |
-| [TC-AP-06](#tc-ap-06)   | Impossible calendar dates are rejected                                     | US-10 | Negative   | Medium   | Playwright `tests/api/booking.api.spec.ts` (test.fail)                                                 | Fail: lucaswsanchez/bookflow#57 (returns 500)                             |
+| [TC-AP-06](#tc-ap-06)   | Impossible calendar dates are rejected                                     | US-10 | Negative   | Medium   | Playwright `tests/api/booking.api.spec.ts` (TC-API-10)                                                 | Pass (lucaswsanchez/bookflow#57 fixed)                                    |
 | [TC-SV-01](#tc-sv-01)   | Admin creates, edits and deletes a service                                 | US-06 | Functional | High     | Playwright `tests/e2e/services.spec.ts` (Chromium, Firefox); Newman                                    | Pass                                                                      |
 | [TC-SV-02](#tc-sv-02)   | Duration outside 5–480 minutes is rejected                                 | US-06 | Boundary   | High     | Playwright `tests/e2e/services.spec.ts`; Newman (4 min via API)                                        | Pass                                                                      |
 | [TC-SV-03](#tc-sv-03)   | Empty name and negative price are rejected                                 | US-06 | Negative   | Medium   | Playwright `tests/e2e/services.spec.ts`                                                                | Pass                                                                      |
-| [TC-SV-04](#tc-sv-04)   | Price above the 32-bit integer limit is rejected                           | US-10 | Boundary   | Low      | Playwright `tests/api/booking.api.spec.ts` (test.fail)                                                 | Fail: lucaswsanchez/bookflow#58 (returns 500)                             |
+| [TC-SV-04](#tc-sv-04)   | Price above the maximum (10,000,000) is rejected                           | US-10 | Boundary   | Low      | Playwright `tests/api/booking.api.spec.ts` (TC-API-11)                                                 | Pass (lucaswsanchez/bookflow#58 fixed)                                    |
 | [TC-UX-01](#tc-ux-01)   | Booking flow can be completed with the keyboard only                       | US-09 | Usability  | High     | Manual, built-in browser (2026-11-19)                                                                  | Pass with observations (see bug-reports.md, suggestions S-01, S-02, S-03) |
-| [TC-UX-02](#tc-ux-02)   | Public pages have no new critical/serious WCAG A/AA violations             | US-09 | Usability  | High     | Playwright `tests/a11y/accessibility.spec.ts`                                                          | Pass with known issue lucaswsanchez/bookflow#60 (color contrast)          |
+| [TC-UX-02](#tc-ux-02)   | Public pages have no new critical/serious WCAG A/AA violations             | US-09 | Usability  | High     | Playwright `tests/a11y/accessibility.spec.ts`                                                          | Pass (lucaswsanchez/bookflow#60 fixed)                                    |
 | [TC-RS-01](#tc-rs-01)   | Booking page on a phone                                                    | US-09 | Usability  | Medium   | Playwright `tests/e2e/responsive.spec.ts` (Mobile Chrome)                                              | Pass                                                                      |
 | [TC-RS-02](#tc-rs-02)   | Admin navigation on a phone                                                | US-09 | Usability  | Medium   | Playwright `tests/e2e/responsive.spec.ts` (Mobile Chrome)                                              | Pass                                                                      |
 
@@ -269,10 +269,11 @@ separately by TC-AV-09.
 
 - **Preconditions:** Admin access token.
 - **Steps:**
-  1. POST /clients with phone "------"
-- **Expected result:** 400 Bad Request: a phone needs digits.
-- **Automation:** Exploratory API session (2026-11-19)
-- **Last result (2026-11-19):** Fail: lucaswsanchez/bookflow#59
+  1. POST /public/businesses/:slug/bookings with phone "------"
+  2. Same with name " " (only spaces)
+- **Expected result:** 400 Bad Request: a phone needs digits and a name needs real characters.
+- **Automation:** Playwright `tests/api/booking.api.spec.ts` (TC-API-12)
+- **Last result (2026-11-19):** Pass (lucaswsanchez/bookflow#59 fixed)
 
 #### TC-BK-08
 
@@ -746,8 +747,8 @@ separately by TC-AV-09.
   1. GET /appointments?from=2026-02-30
   2. GET /appointments?from=2026-13-45
 - **Expected result:** 400 Bad Request.
-- **Automation:** Playwright `tests/api/booking.api.spec.ts` (test.fail)
-- **Last result (2026-11-19):** Fail: lucaswsanchez/bookflow#57 (returns 500)
+- **Automation:** Playwright `tests/api/booking.api.spec.ts` (TC-API-10)
+- **Last result (2026-11-19):** Pass (lucaswsanchez/bookflow#57 fixed)
 
 ### Services (SV)
 
@@ -801,7 +802,7 @@ separately by TC-AV-09.
 
 #### TC-SV-04
 
-**Price above the 32-bit integer limit is rejected**
+**Price above the maximum (10,000,000) is rejected**
 
 | Story | Type     | Technique               | Priority |
 | ----- | -------- | ----------------------- | -------- |
@@ -809,10 +810,12 @@ separately by TC-AV-09.
 
 - **Preconditions:** Admin token.
 - **Steps:**
-  1. POST /services with price 2147483648
-- **Expected result:** 400 Bad Request.
-- **Automation:** Playwright `tests/api/booking.api.spec.ts` (test.fail)
-- **Last result (2026-11-19):** Fail: lucaswsanchez/bookflow#58 (returns 500)
+  1. POST /services with price 10000000
+  2. POST /services with price 10000001
+  3. POST /services with price 2147483648
+- **Expected result:** 10,000,000 is accepted; the two higher prices get 400 Bad Request.
+- **Automation:** Playwright `tests/api/booking.api.spec.ts` (TC-API-11)
+- **Last result (2026-11-19):** Pass (lucaswsanchez/bookflow#58 fixed)
 
 ### Usability, accessibility and responsive (UX, RS)
 
@@ -845,9 +848,9 @@ separately by TC-AV-09.
 - **Preconditions:** None.
 - **Steps:**
   1. Scan landing, booking and login pages
-- **Expected result:** No critical/serious violations outside the documented baseline.
+- **Expected result:** No critical/serious violations.
 - **Automation:** Playwright `tests/a11y/accessibility.spec.ts`
-- **Last result (2026-11-19):** Pass with known issue lucaswsanchez/bookflow#60 (color contrast)
+- **Last result (2026-11-19):** Pass (lucaswsanchez/bookflow#60 fixed)
 
 #### TC-RS-01
 
