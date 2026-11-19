@@ -1,7 +1,7 @@
 import { expect, test as setup } from '@playwright/test';
 import { BookFlowApi, Role } from '../support/api-client';
 import { env } from '../support/env';
-import { POOL_SIZE, resetPool, saveToken } from '../support/session-pool';
+import { POOL_SIZE, resetPool, saveAccess, saveToken } from '../support/session-pool';
 
 setup('log in the demo users once and fill the session pool', async ({ request }) => {
   resetPool();
@@ -11,6 +11,8 @@ setup('log in the demo users once and fill the session pool', async ({ request }
       const tokens = await api.login(env[role].email, env[role].password);
       expect(tokens.user.role).toBe(role.toUpperCase());
       saveToken(role, slot, tokens.refreshToken);
+      // Any of the logins can provide the shared access token for API clients.
+      saveAccess(role, tokens.accessToken, tokens.expiresIn);
     }
   }
 });

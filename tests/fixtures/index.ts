@@ -7,7 +7,7 @@ import { ServicesPage } from '../pages/services.page';
 import { BookFlowApi, Booking, Role, Tokens } from '../support/api-client';
 import { businessDate } from '../support/dates';
 import { env } from '../support/env';
-import { checkout, type Lease } from '../support/session-pool';
+import { checkout, readAccess, saveAccess, type Lease } from '../support/session-pool';
 import { QA_CLIENT } from '../support/test-data';
 
 const REFRESH_KEY = 'bookflow.refreshToken';
@@ -25,12 +25,18 @@ export async function freshTokens(request: APIRequestContext, lease: Lease) {
   return api.login(env[lease.role].email, env[lease.role].password);
 }
 
-/** Gets an authenticated API client from the session pool. */
+/**
+ * Gets an authenticated API client. Uses the shared access token; only when it is about to expire
+ * does it briefly lease a slot to refresh it.
+ */
 export async function authenticatedApi(request: APIRequestContext, role: Role) {
+  const shared = readAccess(role);
+  if (shared) return new BookFlowApi(request, shared);
   const lease = await checkout(role);
   try {
     const tokens = await freshTokens(request, lease);
     lease.release(tokens.refreshToken);
+    saveAccess(role, tokens.accessToken, tokens.expiresIn);
     return new BookFlowApi(request, tokens.accessToken);
   } catch (e) {
     lease.release(null);
